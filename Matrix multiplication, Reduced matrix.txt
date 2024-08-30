@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Function to convert a string of binary digits to an integer array
+void string_to_int_array(const char* str, int* arr, int length) {
+    for (int i = 0; i < length; i++) {
+        arr[i] = str[i] - '0';
+    }
+}
+
+// Function to perform matrix multiplication
+void matrix_multiply(int* list_final3, int** tmat, int rows, int cols, int* result) {
+    for (int j = 0; j < cols; j++) {
+        result[j] = 0;
+        for (int i = 0; i < rows; i++) {
+            result[j] += list_final3[i] * tmat[i][j];
+        }
+        result[j] %= 2;  // Modulus operation
+    }
+}
+
+// Function to save the final matrix to a file
+void save_final_matrix_to_file(const char* filename, int** matrix, int rows, int cols) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            fprintf(file, "%d", matrix[i][j]);
+            if (j < cols - 1) {
+                fprintf(file, ",");
+            }
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
+}
+
+int main() {
+    // Assuming r_df_1 = 1
+    int r_df_1 = 1;
+
+    // Placeholder: Replace with actual data from "row_merged_1"
+    const char* row_merged_1[] = {"110101", "101011", "111000"}; // Example data, replace with actual data
+    int num_rows = sizeof(row_merged_1) / sizeof(row_merged_1[0]);
+
+    // Dimensions of the Toeplitz matrix
+    int r_tmat_1 = 6;  // Example, replace with actual value
+    int c_tmat_1 = 3;  // Example, replace with actual value
+
+    // Initialize Toeplitz matrix (example matrix)
+    int** tmat_1 = (int**)malloc(r_tmat_1 * sizeof(int*));
+    for (int i = 0; i < r_tmat_1; i++) {
+        tmat_1[i] = (int*)malloc(c_tmat_1 * sizeof(int));
+        for (int j = 0; j < c_tmat_1; j++) {
+            tmat_1[i][j] = rand() % 2; // Randomly filling the matrix for example
+        }
+    }
+
+    // Result list
+    int** result_list_1 = (int**)malloc(num_rows * sizeof(int*));
+    for (int i = 0; i < num_rows; i++) {
+        result_list_1[i] = (int*)malloc(c_tmat_1 * sizeof(int));
+    }
+
+    // Process each row in "row_merged_1"
+    for (int y = 0; y < r_df_1; y++) {
+        for (int i = 0; i < num_rows; i++) {
+            int length = strlen(row_merged_1[i]);
+            int* list_final3_1 = (int*)malloc(length * sizeof(int));
+            string_to_int_array(row_merged_1[i], list_final3_1, length);
+
+            // Perform matrix multiplication
+            matrix_multiply(list_final3_1, tmat_1, r_tmat_1, c_tmat_1, result_list_1[i]);
+
+            free(list_final3_1);
+        }
+    }
+
+    // Save the final matrix to a file
+    save_final_matrix_to_file("Case_1_reduced_matrix.txt", result_list_1, num_rows, c_tmat_1);
+
+    printf("Dimension of final matrix = %d x %d\n", num_rows, c_tmat_1);
+
+    // Free allocated memory
+    for (int i = 0; i < r_tmat_1; i++) {
+        free(tmat_1[i]);
+    }
+    free(tmat_1);
+
+    for (int i = 0; i < num_rows; i++) {
+        free(result_list_1[i]);
+    }
+    free(result_list_1);
+
+    return 0;
+}

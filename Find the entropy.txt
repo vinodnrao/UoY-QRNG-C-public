@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#define MAX_ROWS 100000 // Define maximum rows based on expected file size
+#define MAX_COL_LENGTH 100
+
+char data[MAX_ROWS][MAX_COL_LENGTH];
+int counts[MAX_ROWS] = {0};
+double prob[MAX_ROWS] = {0.0};
+double entropy[MAX_ROWS] = {0.0};
+
+// Function to read the file
+int read_file(const char* filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+
+    int rowCount = 0;
+    while (fgets(data[rowCount], MAX_COL_LENGTH, file)) {
+        data[rowCount][strcspn(data[rowCount], "\n")] = 0; // Remove newline character
+        rowCount++;
+    }
+
+    fclose(file);
+    return rowCount;
+}
+
+// Function to calculate entropy
+double calculate_entropy(int totalRows) {
+    int uniqueCount = 0;
+    double totalEntropy = 0.0;
+
+    for (int i = 0; i < totalRows; i++) {
+        int found = 0;
+        for (int j = 0; j < uniqueCount; j++) {
+            if (strcmp(data[i], data[j]) == 0) {
+                counts[j]++;
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            strcpy(data[uniqueCount], data[i]);
+            counts[uniqueCount]++;
+            uniqueCount++;
+        }
+    }
+
+    for (int i = 0; i < uniqueCount; i++) {
+        prob[i] = (double)counts[i] / totalRows;
+        entropy[i] = -(prob[i] * log2(prob[i]));
+        totalEntropy += entropy[i];
+    }
+
+    return totalEntropy;
+}
+
+// Function to find the minimum entropy
+double calculate_min_entropy(int uniqueCount) {
+    double maxProb = 0.0;
+    for (int i = 0; i < uniqueCount; i++) {
+        if (prob[i] > maxProb) {
+            maxProb = prob[i];
+        }
+    }
+    return -(maxProb * log2(maxProb));
+}
+
+int main() {
+    const char *filename = "Case_1_binary.txt";
+    int totalRows = read_file(filename);
+    int len_col_1 = strlen(data[0]);
+
+    printf("Dimension of Case 1 matrix = %d x %d\n", totalRows, len_col_1);
+
+    double totalEntropy = calculate_entropy(totalRows);
+    int uniqueCount = 0;
+    while (counts[uniqueCount] != 0) uniqueCount++; // Find the number of unique strings
+
+    printf("rows = %d, cols = %d\n", uniqueCount, 3); // assuming 3 columns similar to Python
+
+    printf("Entropy of Case 1 = %f\n", totalEntropy);
+    double minEntropy = calculate_min_entropy(uniqueCount);
+    printf("Min-Entropy of Case 1 = %f\n", minEntropy);
+
+    return 0;
+}

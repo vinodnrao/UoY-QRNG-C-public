@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+
+// Function to create a Toeplitz matrix
+void create_toeplitz_matrix(int* random_list, int size, int** toeplitz_matrix) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            toeplitz_matrix[i][j] = (i - j >= 0) ? random_list[i - j] : random_list[j - i];
+        }
+    }
+}
+
+// Function to reduce the Toeplitz matrix based on c_tmat_1
+void reduce_matrix(int** full_matrix, int rows, int cols, int c_tmat_1, int** reduced_matrix) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols - c_tmat_1; j++) {
+            reduced_matrix[i][j] = full_matrix[i][j];
+        }
+    }
+}
+
+// Function to save matrix to a file
+void save_matrix_to_file(const char* filename, int** matrix, int rows, int cols) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            fprintf(file, "%d", matrix[i][j]);
+            if (j < cols - 1) {
+                fprintf(file, ",");
+            }
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
+}
+
+int main() {
+    srand(time(0)); // Seed the random number generator
+
+    // Placeholder values, replace with actual entropy calculations
+    double total_1 = 10.0;  // Replace with calculated total_1
+    double total_2 = 5.0;   // Replace with calculated total_2
+
+    int c_tmat_1 = (int)floor(total_1 - total_2); // Equivalent to int(total_1 - total_2) in Python
+    int r_tmat_1 = 16; // Length of the bit string from the first row in the dataframe
+
+    // Generate random list
+    int* random_list = (int*)malloc(r_tmat_1 * sizeof(int));
+    for (int i = 0; i < r_tmat_1; i++) {
+        random_list[i] = rand() % 2;
+    }
+
+    // Create the full Toeplitz matrix
+    int** toeplitz_matrix = (int**)malloc(r_tmat_1 * sizeof(int*));
+    for (int i = 0; i < r_tmat_1; i++) {
+        toeplitz_matrix[i] = (int*)malloc(r_tmat_1 * sizeof(int));
+    }
+    create_toeplitz_matrix(random_list, r_tmat_1, toeplitz_matrix);
+
+    // Save the full Toeplitz matrix to a file
+    save_matrix_to_file("Case_1_toep_mat_full.txt", toeplitz_matrix, r_tmat_1, r_tmat_1);
+
+    // Reduce the matrix size
+    int** reduced_matrix = (int**)malloc(r_tmat_1 * sizeof(int*));
+    for (int i = 0; i < r_tmat_1; i++) {
+        reduced_matrix[i] = (int*)malloc((r_tmat_1 - c_tmat_1) * sizeof(int));
+    }
+    reduce_matrix(toeplitz_matrix, r_tmat_1, r_tmat_1, c_tmat_1, reduced_matrix);
+
+    // Save the reduced matrix to a file
+    save_matrix_to_file("Case_1_toep_mat.txt", reduced_matrix, r_tmat_1, r_tmat_1 - c_tmat_1);
+
+    printf("Dimension of toeplitz matrix = %d x %d\n", r_tmat_1, r_tmat_1 - c_tmat_1);
+
+    // Free allocated memory
+    free(random_list);
+    for (int i = 0; i < r_tmat_1; i++) {
+        free(toeplitz_matrix[i]);
+        free(reduced_matrix[i]);
+    }
+    free(toeplitz_matrix);
+    free(reduced_matrix);
+
+    return 0;
+}

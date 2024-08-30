@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+
+#define MAX_ROWS 1000
+#define MAX_STRING_LENGTH 20
+#define BINARY_STRING_LENGTH 14 // 13 bits + null terminator
+
+typedef struct {
+    double value;
+    char binary[BINARY_STRING_LENGTH];
+} DataRow;
+
+void round_double(double* num, int decimals) {
+    double factor = pow(10, decimals);
+    *num = round(*num * factor) / factor;
+}
+
+void double_to_binary_string(int number, char* binary) {
+    for (int i = 12; i >= 0; i--) {
+        binary[12 - i] = (number & (1 << i)) ? '1' : '0';
+    }
+    binary[13] = '\0';
+}
+
+int read_file(const char* filename, DataRow data[MAX_ROWS]) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        perror("Could not open file");
+        return -1;
+    }
+
+    int rowCount = 0;
+    while (fscanf(file, "%lf", &data[rowCount].value) != EOF && rowCount < MAX_ROWS) {
+        rowCount++;
+    }
+
+    fclose(file);
+    return rowCount;
+}
+
+void write_file(const char* filename, DataRow data[MAX_ROWS], int rowCount) {
+    FILE* file = fopen(filename, "w");
+    if (!file) {
+        perror("Could not open file");
+        return;
+    }
+
+    for (int i = 0; i < rowCount; i++) {
+        fprintf(file, "%.3lf,%s\n", data[i].value, data[i].binary);
+    }
+
+    fclose(file);
+}
+
+int main() {
+    DataRow data[MAX_ROWS];
+    int rowCount = read_file("Case_1.txt", data);
+    if (rowCount < 0) return 1;
+
+    double minValue = data[0].value;
+    double maxValue = data[0].value;
+
+    for (int i = 0; i < rowCount; i++) {
+        round_double(&data[i].value, 3);
+        if (data[i].value < minValue) minValue = data[i].value;
+        if (data[i].value > maxValue) maxValue = data[i].value;
+    }
+
+    double diff = maxValue - minValue;
+    printf("Min: %.3lf, Max: %.3lf, Diff: %.3lf\n", minValue, maxValue, diff);
+
+    // Create a series of binary strings and map them to values
+    int maxSeriesValue = 5 * 1000;
+    for (int i = 0; i < rowCount; i++) {
+        int seriesValue = (int)(((data[i].value - minValue) / diff) * maxSeriesValue);
+        double_to_binary_string(seriesValue, data[i].binary);
+
+        // Trim the first 5 bits
+        memmove(data[i].binary, data[i].binary + 5, 9); // move 9 bits including null terminator
+    }
+
+    write_file("Case_1_binary.txt", data, rowCount);
+
+    return 0;
+}
